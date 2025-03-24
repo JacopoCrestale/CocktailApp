@@ -8,10 +8,13 @@ interface CocktailService {
     suspend fun getCocktailsByLetter(@Query("f") letter: Char) : CocktailList
 
     @GET("search.php")
-    suspend fun getCocktail(@Query("s") query: String): CocktailList
+    suspend fun getCocktailByName(@Query("s") query: String): CocktailList
 
     @GET("lookup.php")
     suspend fun getCocktailById(@Query("i") query : String) : CocktailList
+
+    @GET("random.php")
+    suspend fun getRandomCocktail() : CocktailList
 }
 
 object RetrofitInstance {

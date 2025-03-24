@@ -23,9 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults.shape
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,9 +48,10 @@ class MainActivity : ComponentActivity() {
                 NavHost(navController = navController, startDestination = "mainMenu") {
                     composable("mainMenu") { MainMenu(navController) }
                     composable("cocktailList") { CocktailListScreen(navController) }
+                    composable("randomCocktail") { RandomCocktailScreen() }
                     composable("cocktailDetails/{cocktailId}") {
                         arg -> val cocktailId = arg.arguments?.getString("cocktailId")?:""
-                        CocktailDetails(navController, cocktailId)
+                        CocktailDetails(cocktailId)
                     }
                 }
             }
@@ -76,6 +75,13 @@ fun MainMenu(navController: NavController) {
                 .padding(top = 8.dp)
         ) {
             Text("LIST COCKTAILS")
+        }
+        Button(
+            onClick = { navController.navigate("randomCocktail") },
+            modifier = Modifier
+                .padding(top = 8.dp)
+        ) {
+            Text("RANDOM COCKTAIL")
         }
     }
 }
@@ -124,7 +130,6 @@ fun SearchBar(query : String, onQueryChanged: (String) -> Unit) {
     )
 }
 
-
 @Composable
 fun CocktailCard(cocktail: Cocktail, navController: NavController, modifier: Modifier = Modifier) {
     Card(
@@ -154,43 +159,8 @@ fun CocktailCard(cocktail: Cocktail, navController: NavController, modifier: Mod
     }
 }
 
-//@Composable
-//fun CocktailDetails(navController: NavController, cocktailId: String) {
-//    val apiService = RetrofitInstance.api
-//    var cocktail by remember { mutableStateOf<Cocktail?>(null) }
-//
-//    LaunchedEffect(cocktailId) {
-//        try {
-//            cocktail = apiService.getCocktailById(cocktailId).drinks?.get(0)
-//        } catch (e: Exception) {
-//            Log.e("Exception", e.message.toString())
-//        }
-//    }
-//
-//    if (cocktail == null) {
-//        Text(text = "Loading...")
-//    } else {
-//        Column(modifier = Modifier.padding(12.dp)) {
-//            AsyncImage(
-//                model = cocktail?.strDrinkThumb,
-//                contentDescription = cocktail?.strDrink,
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .height(180.dp)
-//            )
-//            Text(
-//                text = cocktail?.strDrink ?: "Unknown Cocktail",
-//                modifier = Modifier.padding(top = 8.dp).
-//                    align(Alignment.CenterHorizontally),
-//                style = MaterialTheme.typography.titleMedium,
-//                fontSize = 20.sp,
-//            )
-//        }
-//    }
-//}
-
 @Composable
-fun CocktailDetails(navController: NavController, cocktailId: String) {
+fun CocktailDetails(cocktailId: String) {
     val apiService = RetrofitInstance.api
     var cocktail by remember { mutableStateOf<Cocktail?>(null) }
 
@@ -272,5 +242,25 @@ fun CocktailDetails(navController: NavController, cocktailId: String) {
                 fontSize = 14.sp
             )
         }
+    }
+}
+
+@Composable
+fun RandomCocktailScreen() {
+    val apiService = RetrofitInstance.api
+    var cocktails by remember { mutableStateOf<List<Cocktail>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        try {
+            val response = apiService.getRandomCocktail()
+            cocktails = response.drinks ?: emptyList()
+        } catch (e: Exception) {
+            Log.e("Exception", e.message.toString())
+        }
+    }
+    if(cocktails.isEmpty()){
+        Text("Loading")
+    } else {
+        CocktailDetails(cocktails[0].idDrink.toString())
     }
 }
